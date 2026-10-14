@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<meta name="theme-color" content="#0d1220" />
+<link rel="icon" href="data:," />
+<title>对讲机</title>
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<!-- ============ 首页 ============ -->
+<section id="home" class="screen active">
+  <div class="home-wrap">
+
+    <div class="home-top">
+      <button id="btnAbout" class="round-btn" title="使用说明">i</button>
+    </div>
+
+    <header class="brand">
+      <div class="brand-icon">
+        <svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M7 3h7a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/>
+          <path d="M16 8h1.5a1.5 1.5 0 0 1 1.5 1.5v2A1.5 1.5 0 0 1 17.5 13H16"/>
+          <path d="M9 7h3"/><circle cx="10.5" cy="17.5" r="1"/>
+        </svg>
+      </div>
+      <h1>对讲机</h1>
+      <p class="brand-sub">无服务器 · WebRTC 语音 · 按住即讲</p>
+      <p class="brand-ver">v<span id="verText">-</span> · build <span id="buildText">-</span></p>
+    </header>
+
+    <!-- 附近频道预警（发现即提醒，一键加入） -->
+    <div id="nearbyAlert" class="nearby-alert hidden">
+      <span class="na-pulse"></span>
+      <div class="na-body">
+        <b id="naTitle">发现附近频道</b>
+        <span id="naSub">------ · --</span>
+      </div>
+      <button id="naJoin" class="na-join">一键加入</button>
+      <button id="naClose" class="na-close" aria-label="忽略">✕</button>
+    </div>
+
+    <!-- 上次频道：一键重回，免手输 -->
+    <div id="reconnectCard" class="card reconnect hidden">
+      <div class="reconnect-info">
+        <span class="reconnect-label">上次频道</span>
+        <span id="reconnectCode" class="reconnect-code">------</span>
+        <span id="reconnectRole" class="reconnect-role">你是成员</span>
+      </div>
+      <button id="btnReconnect" class="btn btn-primary reconnect-btn">一键重回</button>
+    </div>
+
+    <div class="card">
+      <label class="field">
+        <span class="field-label">你的呼号</span>
+        <input id="nameInput" type="text" maxlength="12" placeholder="例如：胖狗" autocomplete="off" />
+      </label>
+
+      <label class="field">
+        <span class="field-label">频道码 <em class="field-note">留空＝创建时自动生成，也可以自己定</em></span>
+        <div class="code-row">
+          <input id="codeInput" class="code-input" type="text" maxlength="6" placeholder="6 位频道码" autocomplete="off" autocapitalize="characters" spellcheck="false" />
+          <button id="btnDice" class="dice-btn" title="随机生成一个">🎲</button>
+        </div>
+      </label>
+
+      <button id="btnCreate" class="btn btn-primary">
+        <span class="btn-ico">📡</span> 创建频道
+      </button>
+
+      <div class="divider"><span>或</span></div>
+
+      <button id="btnJoin" class="btn btn-ghost">
+        <span class="btn-ico">🔊</span> 加入频道
+      </button>
+
+      <div id="recentBox" class="recent hidden">
+        <span class="recent-label">最近去过</span>
+        <div id="recentList" class="recent-list"></div>
+      </div>
+    </div>
+
+    <!-- 搜索状态提示（有结果时自动让位给下面的列表） -->
+    <p id="searchHint" class="search-hint hidden">正在搜索可连接的频道…</p>
+
+    <!-- 可连接频道（局域网自动发现 + 公共大厅跨网络发现） -->
+    <div id="nearbyCard" class="card nearby hidden">
+      <div class="nearby-head">
+        <span class="nb-live"></span>
+        <span class="nb-title">发现 <b id="nearbyCount">0</b> 个可连接频道</span>
+        <button id="btnNearbyToggle" class="mini-btn">收起</button>
+      </div>
+      <div id="nearbyList" class="nearby-list"></div>
+      <p class="nearby-note">打开 App 就自动找。<b>附近</b>=同一 WiFi 的同伴，<b>在线</b>=通过公共大厅发现（跨网络）。点一下直接进，不用问频道码。</p>
+    </div>
+
+    <div class="home-foot">
+      <button id="btnSettings" class="link-btn">⚙ 设置</button>
+      <button id="btnAbout2" class="link-btn">ⓘ 使用说明</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 频道页 ============ -->
+<section id="room" class="screen">
+  <div class="room-wrap">
+    <header class="room-head">
+      <button id="btnLeave" class="icon-btn" title="离开">←</button>
+      <div class="room-code-box">
+        <span class="room-code-label">频道码</span>
+        <span id="roomCode" class="room-code">------</span>
+      </div>
+      <button id="btnCopy" class="icon-btn" title="复制频道码">⧉</button>
+    </header>
+
+    <div class="status-bar" id="statusBar" title="长按查看诊断信息">
+      <span id="statusDot" class="dot"></span>
+      <span id="statusText">未连接</span>
+      <span class="grow"></span>
+      <span id="qBadge" class="q-badge hidden">优</span>
+      <span id="roleBadge" class="badge hidden">中继台</span>
+    </div>
+
+    <!-- 输出路由 · 音质档位 · 回音帮助 -->
+    <div class="audio-row">
+      <button id="btnRoute" class="chip">🔊 外放</button>
+      <button id="btnQuality" class="chip">🎚 标准</button>
+      <button id="btnEchoHelp" class="chip">回音?</button>
+    </div>
+    <div class="audio-row">
+      <span class="vol-label">音量</span>
+      <input id="volRange" type="range" min="20" max="100" step="5" value="100" />
+    </div>
+
+    <div class="members" id="members"></div>
+
+    <div class="log" id="log"></div>
+
+    <div class="composer">
+      <input id="chatInput" type="text" maxlength="200" placeholder="发条文字消息…" autocomplete="off" />
+      <button id="btnSend" class="send-btn">发送</button>
+    </div>
+
+    <div class="ptt-zone">
+      <div id="speakingBar" class="speaking-bar">
+        <span class="sp-wave"><i></i><i></i><i></i></span>
+        <span id="speakingText">按住下方按钮开始讲话</span>
+      </div>
+      <button id="pttBtn" class="ptt-btn">
+        <span class="ring"></span>
+        <span class="ptt-label" id="pttLabel">按住<br/>说话</span>
+      </button>
+      <div class="ptt-tip" id="pttTip">发言权空闲</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 设置 ============ -->
+<div id="settings" class="modal hidden">
+  <div class="modal-card scroll-card">
+    <h2>设置</h2>
+
+    <h3 class="sec-title">信令服务器</h3>
+    <p class="modal-sub">只用来撮合 P2P 连接，语音不经过服务器。</p>
+    <label class="field"><span class="field-label">Host</span><input id="cfgHost" type="text" autocomplete="off" /></label>
+    <div class="row2">
+      <label class="field"><span class="field-label">Port</span><input id="cfgPort" type="text" autocomplete="off" /></label>
+      <label class="field"><span class="field-label">Path</span><input id="cfgPath" type="text" autocomplete="off" /></label>
+    </div>
+    <label class="switch-field">
+      <span>使用 WSS / TLS</span>
+      <input id="cfgSecure" type="checkbox" />
+    </label>
+
+    <h3 class="sec-title">频道发现</h3>
+    <p class="modal-sub">局域网（同一 WiFi）+ 公共大厅（跨网络），两个来源自动合并到一个列表。</p>
+    <label class="switch-field">
+      <span>允许别人发现我的频道</span>
+      <input id="cfgBeaconVisible" type="checkbox" />
+    </label>
+    <label class="switch-field">
+      <span>自动扫描可连接的频道</span>
+      <input id="cfgBeaconScan" type="checkbox" />
+    </label>
+    <label class="switch-field">
+      <span>加入公共大厅（跨网络发现）</span>
+      <input id="cfgLobbyOn" type="checkbox" />
+    </label>
+    <p id="lobbyState" class="lobby-state">连接中…</p>
+
+    <h3 class="sec-title">其他</h3>
+    <label class="switch-field">
+      <span>启动时自动重回上次频道</span>
+      <input id="cfgAutoRejoin" type="checkbox" />
+    </label>
+
+    <div class="modal-actions">
+      <button id="cfgReset" class="btn btn-ghost">恢复默认</button>
+      <button id="cfgSave" class="btn btn-primary">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 关于 / 使用说明 ============ -->
+<div id="about" class="modal hidden">
+  <div class="modal-card scroll-card about-card">
+    <h2>对讲机 <span class="ver-chip">v<span id="verText2">-</span></span></h2>
+    <p class="modal-sub">无服务器的 WebRTC 语音对讲 · build <span id="buildText2">-</span></p>
+
+    <div class="about-body">
+      <section>
+        <h3>30 秒上手</h3>
+        <ol class="tips">
+          <li>填个呼号，认得出是谁就行</li>
+          <li>点<b>创建频道</b>当台长：频道码留空就自动生成，也可以自己填一个好记的；你就是「中继台」</li>
+          <li>把频道码告诉同伴，他们填进<b>加入频道</b>即通</li>
+          <li>不想输码？打开 App 就自动找：<b>同一 WiFi</b> 的同伴标「附近」，<b>其他网络</b>（4G/别的 WiFi）的同伴标「在线」，点一下直接进</li>
+          <li>按住中间的大圆钮说话，松开就听</li>
+        </ol>
+      </section>
+
+      <section>
+        <h3>语音质量</h3>
+        <p>语音用 Opus 全带宽编码（48kHz 单声道），参数按 VoNR 的思路取舍：</p>
+        <ul class="tips">
+          <li>带内 FEC 冗余：丢包时用冗余数据补齐，而不是直接卡顿</li>
+          <li>关闭不连续发送(DTX)：避免每句话开头被削掉</li>
+          <li>按链路实际情况限速：盲目冲高码率反而更容易丢包、更糊</li>
+          <li>通话期间独占音频通道：别的 App 通知音插不进来</li>
+        </ul>
+        <p class="muted">频道页可切音质档位：省流 / 标准 / 高保真。右上角的网络徽章是实时链路评分。</p>
+      </section>
+
+      <section>
+        <h3>有回音？</h3>
+        <p>回音几乎都来自「声学耦合」——对方喇叭放出的声音又被你的麦克风采了回去。戴耳机最彻底，也可以切听筒、把音量调低。频道页的「回音?」里有一键处理。</p>
+      </section>
+
+      <section>
+        <h3>它是怎么工作的</h3>
+        <p>没有服务器。创建者只当「中继台」：登记频道码、维护成员表、仲裁谁在说话——不碰语音。语音是成员之间点对点直连的，不经过任何中转。</p>
+        <p><b>怎么做到「打开就能发现」？</b>同一 WiFi 下用局域网广播互相打招呼；不在同一网络时，大家靠一个「公共大厅」互通 —— 这个大厅不是一个服务器，而是由<b>最先打开 App 的那台手机临时担任</b>，其他人自动挂上去。它退出后，剩下的手机会自动重新选一个，你无需做任何操作。</p>
+      </section>
+
+      <section>
+        <h3>已知限制</h3>
+        <ul class="tips">
+          <li>「附近」标签要求连同一个 WiFi，且路由器没开 AP 隔离</li>
+          <li>「在线」标签靠公共大厅，需要能上网（和打电话一样，完全断网就用不了）</li>
+          <li>息屏或长时间切后台会断（还没做后台保活）</li>
+          <li>公共信令服务器偶尔需要重试</li>
+        </ul>
+      </section>
+    </div>
+
+    <div class="modal-actions">
+      <button id="btnAboutClose" class="btn btn-primary">知道了</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 回音帮助 ============ -->
+<div id="echoHelp" class="modal hidden">
+  <div class="modal-card">
+    <h2>有回音怎么办</h2>
+    <p class="modal-sub">
+      回音几乎都来自「声学耦合」：对方喇叭里放出的声音，被你的麦克风又收进去传了回来，
+      这样往返几轮就变成明显的回音。两台设备越近、外放音量越大，回音越重。
+    </p>
+    <ol class="tips">
+      <li><b>戴耳机</b> —— 最彻底，回音直接消失</li>
+      <li>两台设备<b>拉开 2 米以上</b>，别放同一张桌子上</li>
+      <li>切<b>听筒模式</b>并把音量调低，喇叭漏出去的声音会小很多</li>
+    </ol>
+    <p class="modal-sub" style="margin-top:14px">
+      想确认是不是这个原因：把一台设备拿到<b>另一个房间</b>再试一次，回音若消失即可确认。
+    </p>
+    <div class="modal-actions">
+      <button id="btnEchoFix" class="btn btn-primary">一键压回音</button>
+      <button id="btnEchoClose" class="btn btn-ghost">关闭</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<!-- 诊断面板：长按状态栏唤出 / 点任意处关闭 -->
+<div id="debug" class="debug hidden">
+  <div class="debug-head">
+    <span>诊断信息</span>
+    <span class="debug-close" id="debugClose">关闭 ✕</span>
+  </div>
+  <pre id="debugBody">采集中的…</pre>
+</div>
+
+<script src="peerjs.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

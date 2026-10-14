@@ -1,0 +1,11 @@
+# ===== 依赖（不进版本库） =====
+node_modules/
+
+# ===== Gradle 缓存（本项目使用自定义目录 .gradle-home） =====
+.gradle-home/
+
+# ===== 系统 / 编辑器无关文件 =====
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini

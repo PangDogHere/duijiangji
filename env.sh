@@ -1,0 +1,7 @@
+export JAVA_HOME="D:/apps/androidstudio/jbr"
+export ANDROID_HOME="D:/apps/androidSDK"
+export ANDROID_SDK_ROOT="D:/apps/androidSDK"
+export PATH="/d/apps/androidstudio/jbr/bin:/d/apps/androidSDK/platform-tools:/d/apps/androidSDK/build-tools/36.1.0:$PATH"
+export NODE="C:/Users/Administrator/.workbuddy/binaries/node/versions/22.22.2-6/node.exe"
+export NPM="C:/Users/Administrator/.workbuddy/binaries/node/versions/22.22.2-6/node_modules/npm/bin/npm-cli.js"
+export GRADLE_USER_HOME="C:/Users/Administrator/WorkBuddy/2026-10-13-22-31-30/walkie/.gradle-home"
